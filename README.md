@@ -308,19 +308,6 @@ dotnet test --solution Hush.sln -c Release
 Requires the .NET 10 SDK. Native AOT also needs Visual Studio or the Build Tools with the C++ workload; use
 `./build/publish.ps1 -NoAot` without them.
 
-## Sister projects
-
-Hush is one of three [Palisade](https://github.com/ide-bloom) projects:
-
-- [**Epicurus**](https://github.com/ide-bloom/epicurus)
-- **Hush**: secrets bound to your TPM and Windows Hello (this repository)
-- [**Chaperone**](https://github.com/ide-bloom/chaperone)
-
-## Contributing
-
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Please
-never commit token-shaped strings, not even fake ones; tests build them at runtime.
-
 ## Security
 
 Report vulnerabilities privately; see [SECURITY.md](SECURITY.md). Releases include `SHA256SUMS` and build provenance
