@@ -1,0 +1,52 @@
+name: Bug report
+description: Something in Hush does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never paste secrets, recovery keys or unredacted config files.** Hush output is redacted by design; keep it that way.
+        Security vulnerabilities go to the private channel in SECURITY.md, not here.
+  - type: input
+    id: version
+    attributes:
+      label: Hush version
+      description: Output of `hush --version`.
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and build
+      description: For example "Windows 11 24H2 (26100.4202)". Run `winver`.
+    validations:
+      required: true
+  - type: dropdown
+    id: factors
+    attributes:
+      label: Factors (from `hush status`)
+      options:
+        - Windows Hello + TPM
+        - Windows Hello + DPAPI (degraded)
+        - No vault yet
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Commands you ran, and the terminal (Windows Terminal, VS Code, conhost, an MCP client...).
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Redacted command output, or lines from %LOCALAPPDATA%\Hush\logs (they contain no secret values).
+      render: text

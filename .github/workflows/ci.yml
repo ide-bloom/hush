@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  build:
+    name: Build, test, scan
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Hush.sln
+
+      - name: Build (warnings are errors)
+        run: dotnet build Hush.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test --solution Hush.sln -c Release --no-build
+
+      - name: Vulnerable package check
+        shell: pwsh
+        run: |
+          $report = dotnet list Hush.sln package --vulnerable --include-transitive 2>&1 | Out-String
+          Write-Output $report
+          if ($report -match 'has the following vulnerable packages') { throw 'Vulnerable packages found.' }
+
+      - name: Hush scans its own repository
+        shell: pwsh
+        run: |
+          ./src/Hush.Cli/bin/Release/net10.0-windows10.0.26100.0/hush.exe scan . --no-defaults --sarif --output hush.sarif
+          ./src/Hush.Cli/bin/Release/net10.0-windows10.0.26100.0/hush.exe scan . --no-defaults --exit-code
+
+      - name: Upload scan results to code scanning
+        if: always() && github.event_name == 'push'
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
+        with:
+          sarif_file: hush.sarif
+          category: hush-secrets
+
+  publish:
+    name: Publish ${{ matrix.rid }}
+    needs: build
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [win-x64, win-arm64]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+
+      - name: Publish hush.exe (Native AOT) and HushTray.exe
+        shell: pwsh
+        run: ./build/publish.ps1 -Runtimes ${{ matrix.rid }} -Output artifacts
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: hush-${{ matrix.rid }}
+          path: artifacts/${{ matrix.rid }}
+          if-no-files-found: error
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: publish
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: downloaded
+
+      - name: Package zips and SHA256SUMS
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          New-Item -ItemType Directory dist | Out-Null
+          foreach ($rid in 'win-x64', 'win-arm64') {
+            $stage = "stage/$rid"
+            New-Item -ItemType Directory $stage -Force | Out-Null
+            Copy-Item "downloaded/hush-$rid/hush.exe", "downloaded/hush-$rid/HushTray.exe", README.md, LICENSE $stage
+            Compress-Archive -Path "$stage/*" -DestinationPath "dist/hush-$version-$rid.zip"
+          }
+          Get-ChildItem dist -Filter *.zip | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name
+          } | Set-Content -Encoding ascii dist/SHA256SUMS
+          Get-Content dist/SHA256SUMS
+
+      - name: Release notes from CHANGELOG.md
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          $lines = Get-Content CHANGELOG.md
+          $start = ($lines | Select-String -Pattern "^## \[$([regex]::Escape($version))\]").LineNumber
+          if (-not $start) { throw "CHANGELOG.md has no section for $version" }
+          $rest = $lines[$start..($lines.Count - 1)]
+          $end = ($rest | Select-String -Pattern '^## \[').LineNumber | Select-Object -First 1
+          $notes = if ($end) { $rest[0..($end - 2)] } else { $rest }
+          $notes | Set-Content -Encoding utf8 notes.md
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/*.zip
+            downloaded/hush-*/hush.exe
+            downloaded/hush-*/HushTray.exe
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create '${{ github.ref_name }}' dist/* --title "Hush ${{ github.ref_name }}" --notes-file notes.md --verify-tag

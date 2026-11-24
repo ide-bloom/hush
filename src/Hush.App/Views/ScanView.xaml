@@ -1,0 +1,57 @@
+<UserControl x:Class="Hush.App.Views.ScanView" x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <UserControl.Resources>
+    <CollectionViewSource x:Key="Grouped">
+      <CollectionViewSource.GroupDescriptions>
+        <PropertyGroupDescription PropertyName="RiskText" />
+      </CollectionViewSource.GroupDescriptions>
+    </CollectionViewSource>
+  </UserControl.Resources>
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="Scan" Style="{StaticResource PageTitle}" />
+      <TextBlock Style="{StaticResource PageSubtitle}"
+                 Text="Find plaintext secrets in MCP configs, .env files, credential files and shell history. Results show only the first four characters." />
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+        <Button x:Name="ScanButton" Content="_Run scan" Click="OnScan" Padding="14,6" Margin="0,0,8,0" Style="{DynamicResource AccentButtonStyle}" />
+        <Button x:Name="MigrateButton" Content="_Preview migration..." Click="OnPreview" Padding="14,6" Margin="0,0,8,0" IsEnabled="False" />
+        <Button Content="_Undo last migration" Click="OnUndo" Padding="14,6" />
+        <TextBlock x:Name="Summary" VerticalAlignment="Center" Margin="16,0,0,0" Opacity="0.8" />
+      </StackPanel>
+    </StackPanel>
+    <Grid>
+      <ListView x:Name="Findings" ItemsSource="{Binding Source={StaticResource Grouped}}" SelectionMode="Extended"
+                AutomationProperties.Name="Findings" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <ListView.GroupStyle>
+          <GroupStyle>
+            <GroupStyle.HeaderTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="15" Margin="4,12,0,6" />
+              </DataTemplate>
+            </GroupStyle.HeaderTemplate>
+          </GroupStyle>
+        </ListView.GroupStyle>
+        <ListView.ItemTemplate>
+          <DataTemplate>
+            <Grid Margin="4,6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <CheckBox Grid.Column="0" IsChecked="{Binding Selected, Mode=TwoWay}" IsEnabled="{Binding CanMigrate}" VerticalAlignment="Top" Margin="0,2,10,0"
+                        AutomationProperties.Name="{Binding Title}" />
+              <StackPanel Grid.Column="1">
+                <TextBlock FontWeight="SemiBold" Text="{Binding Title}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Location}" FontFamily="{StaticResource MonoFont}" FontSize="12" Opacity="0.85" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Note}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" Margin="0,2,0,0" />
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListView.ItemTemplate>
+      </ListView>
+      <TextBlock x:Name="Placeholder" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.7" TextAlignment="Center"
+                 Text="Run a scan to see plaintext secrets on this PC." />
+    </Grid>
+  </DockPanel>
+</UserControl>

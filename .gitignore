@@ -1,0 +1,15 @@
+bin/
+obj/
+artifacts/
+publish/
+TestResults/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+*.swp
+# Never commit local secrets, even in this repo.
+.env
+.env.*
+!.env.example

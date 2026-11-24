@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
+PackageIdentifier: ide-bloom.Hush
+PackageVersion: "{{VERSION}}"
+PackageLocale: en-US
+Publisher: ide-bloom
+PublisherUrl: https://github.com/ide-bloom
+PublisherSupportUrl: https://github.com/ide-bloom/hush/issues
+PackageName: Hush
+PackageUrl: https://github.com/ide-bloom/hush
+License: MIT
+LicenseUrl: https://github.com/ide-bloom/hush/blob/main/LICENSE
+ShortDescription: TPM- and Windows Hello-bound secrets for developers and AI agents.
+Description: |-
+  Hush keeps API keys and tokens in an encrypted vault that only unlocks on your PC (TPM) with you present
+  (Windows Hello), and injects them into the one process that needs them: hush run -- npm run dev.
+  It also finds plaintext secrets in .env files, MCP client configs and credential files, and migrates them.
+Moniker: hush
+Tags:
+  - secrets
+  - security
+  - tpm
+  - windows-hello
+  - mcp
+  - developer-tools
+ReleaseNotesUrl: https://github.com/ide-bloom/hush/releases/tag/v{{VERSION}}
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

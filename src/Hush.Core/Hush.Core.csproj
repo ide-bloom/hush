@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(HushWindowsTfm)</TargetFramework>
+    <RootNamespace>Hush.Core</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <Description>Vault format, cryptography, hardware key providers, scanner, migrators, manifest and audit log for Hush.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scanning\rules.toml" LogicalName="Hush.Core.Scanning.rules.toml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Tomlyn" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hush.Analyzers\Hush.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hush.Core.Tests" />
+    <InternalsVisibleTo Include="Hush.Cli.Tests" />
+    <InternalsVisibleTo Include="Hush.App.Tests" />
+  </ItemGroup>
+
+</Project>

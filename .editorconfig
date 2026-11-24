@@ -1,0 +1,43 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml,toml,xml,csproj,props,targets,xaml,md}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_using_directive_placement = outside_namespace:warning
+dotnet_sort_system_directives_first = true
+csharp_prefer_braces = when_multiline:suggestion
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+dotnet_style_readonly_field = true:warning
+dotnet_diagnostic.IDE0005.severity = warning
+dotnet_diagnostic.IDE0161.severity = warning
+
+# Hush formats user-facing text with the invariant culture where it matters; CLI text is English-only.
+dotnet_diagnostic.CA1303.severity = none
+# Hush.Core exposes a few nested types for discoverability (e.g. Finding kinds).
+dotnet_diagnostic.CA1034.severity = none
+
+[tests/**.cs]
+# Test method names use underscores for readability.
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA2007.severity = none
+dotnet_diagnostic.CA1861.severity = none
+dotnet_diagnostic.CS1591.severity = none
+dotnet_diagnostic.CA5394.severity = none
+# Tests pass CancellationToken.None explicitly where cancellation does not matter.
+dotnet_diagnostic.xUnit1051.severity = none
+dotnet_diagnostic.CA1859.severity = none

@@ -1,0 +1,51 @@
+<UserControl x:Class="Hush.App.Views.VaultView" x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="Vault" Style="{StaticResource PageTitle}" />
+      <TextBlock Style="{StaticResource PageSubtitle}"
+                 Text="Secret names, scopes and policies. Values stay encrypted; revealing one needs Windows Hello." />
+      <DockPanel Margin="0,0,0,12">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+          <Button Content="_Add secret" Click="OnAdd" Margin="0,0,8,0" Padding="14,6" />
+          <Button x:Name="EditButton" Content="_Edit" Click="OnEdit" Margin="0,0,8,0" Padding="14,6" IsEnabled="False" />
+          <Button x:Name="DeleteButton" Content="_Delete" Click="OnDelete" Padding="14,6" IsEnabled="False" />
+        </StackPanel>
+        <Grid DockPanel.Dock="Right" Width="240" HorizontalAlignment="Right">
+          <TextBox x:Name="Filter" TextChanged="OnFilter" VerticalContentAlignment="Center"
+                   AutomationProperties.Name="Search secrets" AutomationProperties.HelpText="Filter by name or scope" ToolTip="Filter by name or scope" />
+          <!-- WPF's TextBox has no placeholder property; this hint shows only while the box is empty. -->
+          <TextBlock Text="Search secrets…" IsHitTestVisible="False" VerticalAlignment="Center" Margin="12,0,0,0"
+                     Foreground="{DynamicResource TextFillColorPlaceholderBrush}">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding Text, ElementName=Filter}" Value="">
+                    <Setter Property="Visibility" Value="Visible" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
+        </Grid>
+      </DockPanel>
+    </StackPanel>
+    <Grid>
+      <DataGrid x:Name="Secrets" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column"
+                GridLinesVisibility="None" SelectionChanged="OnSelection" MouseDoubleClick="OnEdit" CanUserResizeRows="False"
+                AutomationProperties.Name="Secrets">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" />
+          <DataGridTextColumn Header="Scope" Binding="{Binding ScopeText}" Width="*" />
+          <DataGridTextColumn Header="Policy" Binding="{Binding PolicyText}" Width="*" />
+          <DataGridTextColumn Header="Last used" Binding="{Binding LastUsedText}" Width="*" />
+          <DataGridTextColumn Header="Updated" Binding="{Binding UpdatedText}" Width="*" />
+        </DataGrid.Columns>
+      </DataGrid>
+      <TextBlock x:Name="Empty" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.7" TextAlignment="Center"
+                 Text="The vault is empty.&#x0a;Add a secret here, or use the Scan page to find plaintext secrets and migrate them." />
+    </Grid>
+  </DockPanel>
+</UserControl>

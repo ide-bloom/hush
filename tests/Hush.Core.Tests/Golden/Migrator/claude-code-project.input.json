@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "huggingface": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["hf-mcp-server"],
+      "env": {
+        "HF_TOKEN": "{{HF}}",
+        "HF_HOME": "C:\\cache\\hf"
+      }
+    },
+    "remote-api": {
+      "type": "http",
+      "url": "https://mcp.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer {{BEARER}}"
+      }
+    }
+  }
+}

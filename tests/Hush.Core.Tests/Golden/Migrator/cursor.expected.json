@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "openai-tools": {
+      "command": "hush",
+      "args": ["run", "--secrets", "OPENAI_API_KEY", "--", "C:\\tools\\openai-mcp.exe"]
+    }
+  }
+}

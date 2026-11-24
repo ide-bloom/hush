@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>$(HushWindowsTfm)</TargetFramework>
+    <RootNamespace>Hush.Cli</RootNamespace>
+    <AssemblyName>hush</AssemblyName>
+    <ApplicationIcon>..\..\assets\hush.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Description>hush.exe: the Hush command line and session broker.</Description>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <!--
+    Publishing. hush.exe is published with Native AOT by default: it starts in milliseconds, which matters because
+    MCP clients launch it for every server. The WinRT (Windows Hello) projection, TPM and pipe code are trim and AOT
+    clean. Pass -p:HushAot=false for the fallback, a self-contained single file with ReadyToRun.
+    See docs/architecture.md, "Native AOT". These settings apply only to 'dotnet publish' so tests can reference
+    this project.
+  -->
+  <PropertyGroup Condition="'$(_IsPublishing)' == 'true' and '$(HushAot)' != 'false'">
+    <PublishAot>true</PublishAot>
+    <StripSymbols>true</StripSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(_IsPublishing)' == 'true' and '$(HushAot)' == 'false'">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hush.Core\Hush.Core.csproj" />
+    <ProjectReference Include="..\Hush.Agent\Hush.Agent.csproj" />
+    <ProjectReference Include="..\Hush.Analyzers\Hush.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hush.Cli.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "openai-tools": {
+      "command": "C:\\tools\\openai-mcp.exe",
+      "env": {
+        "OPENAI_API_KEY": "{{OPENAI}}"
+      }
+    }
+  }
+}

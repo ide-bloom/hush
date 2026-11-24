@@ -1,0 +1,39 @@
+<Project>
+  <!-- Shared settings for every project in the repository. -->
+  <PropertyGroup>
+    <LangVersion>14</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+    <!--
+      The window-handle Windows Hello APIs (KeyCredentialManager.RequestCreateForWindowAsync and
+      KeyCredential.RequestSignForWindowAsync) only exist in the 10.0.26100 metadata, so we compile
+      against that SDK while still running on 22621+. Calls to newer APIs are guarded at runtime.
+      See docs/architecture.md, "Target framework".
+    -->
+    <HushWindowsTfm>net10.0-windows10.0.26100.0</HushWindowsTfm>
+    <SupportedOSPlatformVersion>10.0.22621.0</SupportedOSPlatformVersion>
+    <!-- 10.0.26100.57 (the SDK default) predates the *ForWindowAsync Hello methods; .87 includes them. -->
+    <WindowsSdkPackageVersion>10.0.26100.87</WindowsSdkPackageVersion>
+
+    <Version>0.1.0</Version>
+    <Authors>ide-bloom</Authors>
+    <Company>ide-bloom</Company>
+    <Product>Hush</Product>
+    <Copyright>Copyright (c) 2026 ide-bloom</Copyright>
+    <RepositoryUrl>https://github.com/ide-bloom/hush</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <NeutralLanguage>en</NeutralLanguage>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <PublishDocumentationFiles>false</PublishDocumentationFiles>
+  </PropertyGroup>
+</Project>

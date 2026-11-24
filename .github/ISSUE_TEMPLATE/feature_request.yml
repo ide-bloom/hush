@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest an improvement, a new scanner rule, or support for another MCP client.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: For scanner rules, describe the token format and link the provider's documentation. Do not paste real tokens.
+  - type: textarea
+    id: threat
+    attributes:
+      label: Security impact
+      description: Does this change what Hush protects against? See docs/threat-model.md.

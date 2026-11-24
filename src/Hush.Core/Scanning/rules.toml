@@ -1,0 +1,433 @@
+# Hush scanner rules.
+#
+# Each [[rules]] entry:
+#   id            unique, kebab-case
+#   provider      who issued the secret
+#   type          what kind of secret it is
+#   pattern       .NET regular expression. If it has a named group "secret", that group is the secret;
+#                 otherwise the whole match is.
+#   keywords      cheap case-insensitive prefilter: the line must contain one of these
+#   confidence    high | medium | low  (before checksum/entropy adjustments)
+#   risk          critical | high | medium | low
+#   note          what the secret grants and how to revoke or rotate it
+#   checksum      optional validator: github-crc32 | jwt
+#   min_entropy   optional Shannon entropy floor (bits per character) for the secret
+#   path_regex    optional: only apply to files whose full path matches
+#
+# Patterns describe formats only. Never add a real or realistic token to this file.
+
+[allowlist]
+# Values that are obviously placeholders are never reported.
+values = [
+  "your-api-key-here", "your_api_key_here", "your-api-key", "your_api_key", "your-token-here",
+  "your_token_here", "your-secret-here", "changeme", "change-me", "replace-me", "replace_me",
+  "placeholder", "example", "dummy", "sample", "redacted", "xxxxxxxx", "todo", "none", "null",
+  "password", "secret", "token",
+]
+# Regular expressions matched against the whole secret value.
+patterns = [
+  '^\$\{[^}]*\}$',            # ${VAR}
+  '^\$\([^)]*\)$',            # $(command)
+  '^\{\{[^}]*\}\}$',          # {{template}}
+  '^%[A-Za-z0-9_]+%$',        # %VAR%
+  '^\$[A-Za-z_][A-Za-z0-9_]*$', # $VAR
+  '^<[^>]*>$',                # <your key>
+  '^(.)\1+$',                 # aaaaaaaa, ********
+  '(?i)^(your|my|insert|enter|put)[-_ ]',
+  '(?i)(example|placeholder|dummy|changeme|redacted|xxxx)',
+  '(?i)^(process\.env|os\.environ|env\()',
+  '^/?[A-Z][A-Z0-9]*(_[A-Z0-9]+)+$',  # an UPPER_SNAKE_CASE variable or secret name, not a value
+]
+
+# ---------------------------------------------------------------------------- AI providers
+
+[[rules]]
+id = "openai-api-key"
+provider = "OpenAI"
+type = "API key"
+pattern = '\b(?<secret>sk-(?:proj-|svcacct-|admin-)?[A-Za-z0-9_-]{20,200}T3BlbkFJ[A-Za-z0-9_-]{20,200})'
+keywords = ["T3BlbkFJ"]
+confidence = "high"
+risk = "critical"
+note = "Bills API usage to your OpenAI organization and can read files, assistants and fine-tunes. Revoke at https://platform.openai.com/api-keys and create a new key."
+
+[[rules]]
+id = "openai-project-key"
+provider = "OpenAI"
+type = "Project API key"
+pattern = '\b(?<secret>sk-(?:proj|svcacct|admin)-[A-Za-z0-9_-]{40,250})'
+keywords = ["sk-proj-", "sk-svcacct-", "sk-admin-"]
+confidence = "medium"
+risk = "critical"
+note = "Bills API usage to your OpenAI project. Revoke at https://platform.openai.com/api-keys."
+
+[[rules]]
+id = "anthropic-api-key"
+provider = "Anthropic"
+type = "API key"
+pattern = '\b(?<secret>sk-ant-(?:api|admin)\d{2}-[A-Za-z0-9_-]{80,120})'
+keywords = ["sk-ant-"]
+confidence = "high"
+risk = "critical"
+note = "Bills Claude API usage to your Anthropic organization. Revoke in the Claude Console under Settings > API keys and create a new key."
+
+[[rules]]
+id = "google-api-key"
+provider = "Google AI / Google Cloud"
+type = "API key"
+pattern = '\b(?<secret>AIza[0-9A-Za-z_-]{35})(?![0-9A-Za-z_-])'
+keywords = ["AIza"]
+confidence = "high"
+risk = "high"
+note = "A Google API key (Gemini API, Maps, and others depending on restrictions). Delete or regenerate it in Google AI Studio or the Cloud console under APIs & Services > Credentials, and restrict it."
+
+[[rules]]
+id = "huggingface-token"
+provider = "Hugging Face"
+type = "Access token"
+pattern = '\b(?<secret>hf_[A-Za-z]{34})(?![A-Za-z0-9])'
+keywords = ["hf_"]
+confidence = "high"
+risk = "high"
+note = "Reads (and with write scope, pushes to) your models, datasets and Spaces. Revoke at https://huggingface.co/settings/tokens."
+
+# ---------------------------------------------------------------------------- Source hosting
+
+[[rules]]
+id = "github-pat-classic"
+provider = "GitHub"
+type = "Personal access token (classic)"
+pattern = '\b(?<secret>ghp_[A-Za-z0-9]{36})(?![A-Za-z0-9])'
+keywords = ["ghp_"]
+confidence = "high"
+risk = "critical"
+checksum = "github-crc32"
+note = "Acts as you on GitHub with the token's scopes (often full repo access). Revoke at https://github.com/settings/tokens."
+
+[[rules]]
+id = "github-pat-fine-grained"
+provider = "GitHub"
+type = "Fine-grained personal access token"
+pattern = '\b(?<secret>github_pat_[A-Za-z0-9]{22}_[A-Za-z0-9]{59})(?![A-Za-z0-9])'
+keywords = ["github_pat_"]
+confidence = "high"
+risk = "critical"
+note = "Acts as you on the repositories and permissions granted to the token. Revoke at https://github.com/settings/personal-access-tokens."
+
+[[rules]]
+id = "github-oauth-token"
+provider = "GitHub"
+type = "OAuth / app token"
+pattern = '\b(?<secret>gh[ousr]_[A-Za-z0-9]{36})(?![A-Za-z0-9])'
+keywords = ["gho_", "ghu_", "ghs_", "ghr_"]
+confidence = "high"
+risk = "critical"
+checksum = "github-crc32"
+note = "An OAuth or GitHub App token (gh CLI, Copilot, or an OAuth app). Revoke the app's authorization at https://github.com/settings/applications, or run 'gh auth logout'."
+
+[[rules]]
+id = "gitlab-pat"
+provider = "GitLab"
+type = "Personal / project access token"
+pattern = '\b(?<secret>gl(?:pat|rt|dt|ptt)-[A-Za-z0-9_.-]{20,80})'
+keywords = ["glpat-", "glrt-", "gldt-", "glptt-"]
+confidence = "high"
+risk = "critical"
+note = "Acts on GitLab with the token's scopes. Revoke under User Settings > Access tokens (or the project's access tokens)."
+
+# ---------------------------------------------------------------------------- Messaging
+
+[[rules]]
+id = "slack-token"
+provider = "Slack"
+type = "API token"
+pattern = '\b(?<secret>xox[baprse]-[0-9A-Za-z-]{10,250})'
+keywords = ["xoxb-", "xoxa-", "xoxp-", "xoxr-", "xoxs-", "xoxe-"]
+confidence = "high"
+risk = "high"
+note = "Reads and posts messages as the bot or user it belongs to. Revoke in the Slack app's OAuth & Permissions page (or https://api.slack.com/apps)."
+
+[[rules]]
+id = "slack-webhook"
+provider = "Slack"
+type = "Incoming webhook URL"
+pattern = '(?<secret>https://hooks\.slack\.com/services/T[A-Z0-9]{6,}/B[A-Z0-9]{6,}/[A-Za-z0-9]{20,})'
+keywords = ["hooks.slack.com"]
+confidence = "high"
+risk = "medium"
+note = "Posts messages into a channel. Remove the webhook in the Slack app configuration."
+
+[[rules]]
+id = "discord-bot-token"
+provider = "Discord"
+type = "Bot token"
+pattern = '\b(?<secret>[MNO][A-Za-z0-9_-]{23,27}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,40})(?![A-Za-z0-9_-])'
+keywords = ["discord", "bot"]
+confidence = "medium"
+risk = "high"
+min_entropy = 4.0
+note = "Full control of the Discord bot. Reset the token in the Discord Developer Portal > Bot."
+
+[[rules]]
+id = "discord-webhook"
+provider = "Discord"
+type = "Webhook URL"
+pattern = '(?<secret>https://(?:canary\.|ptb\.)?discord(?:app)?\.com/api/webhooks/\d{10,}/[A-Za-z0-9_-]{50,80})'
+keywords = ["discord"]
+confidence = "high"
+risk = "medium"
+note = "Posts into a Discord channel. Delete the webhook in the channel's Integrations settings."
+
+[[rules]]
+id = "twilio-api-key"
+provider = "Twilio"
+type = "API key SID"
+pattern = '\b(?<secret>SK[0-9a-f]{32})\b'
+keywords = ["SK"]
+confidence = "low"
+risk = "medium"
+min_entropy = 3.2
+note = "A Twilio API key SID; together with its secret it sends messages and calls billed to your account. Delete it in the Twilio console under API keys."
+
+[[rules]]
+id = "twilio-auth-token"
+provider = "Twilio"
+type = "Auth token"
+pattern = '''(?i)twilio[A-Za-z0-9_]*(?:auth)?[_-]?token["']?\s*[:=]\s*["']?(?<secret>[0-9a-f]{32})\b'''
+keywords = ["twilio"]
+confidence = "high"
+risk = "high"
+note = "The account auth token: full API access to your Twilio account. Rotate it in the Twilio console (Account > API keys & tokens)."
+
+[[rules]]
+id = "sendgrid-api-key"
+provider = "SendGrid"
+type = "API key"
+pattern = '\b(?<secret>SG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43})(?![A-Za-z0-9_-])'
+keywords = ["SG."]
+confidence = "high"
+risk = "high"
+note = "Sends email as your domain (a phishing favorite). Delete it at https://app.sendgrid.com/settings/api_keys."
+
+# ---------------------------------------------------------------------------- Payments
+
+[[rules]]
+id = "stripe-live-key"
+provider = "Stripe"
+type = "Live secret / restricted key"
+pattern = '\b(?<secret>(?:sk|rk)_live_[A-Za-z0-9]{24,247})(?![A-Za-z0-9])'
+keywords = ["_live_"]
+confidence = "high"
+risk = "critical"
+note = "Moves real money: charges, refunds and payouts. Roll the key in the Stripe Dashboard > Developers > API keys."
+
+[[rules]]
+id = "stripe-test-key"
+provider = "Stripe"
+type = "Test secret key"
+pattern = '\b(?<secret>(?:sk|rk)_test_[A-Za-z0-9]{24,247})(?![A-Za-z0-9])'
+keywords = ["_test_"]
+confidence = "high"
+risk = "low"
+note = "Test-mode only, but it still exposes your test data and account structure. Roll it in the Stripe Dashboard."
+
+# ---------------------------------------------------------------------------- Cloud
+
+[[rules]]
+id = "aws-access-key-id"
+provider = "AWS"
+type = "Access key ID"
+pattern = '\b(?<secret>(?:AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16})(?![A-Z0-9])'
+keywords = ["AKIA", "ASIA", "ABIA", "ACCA"]
+confidence = "high"
+risk = "high"
+note = "Identifies an AWS access key; the matching secret access key is usually nearby. Deactivate and delete it in IAM > Security credentials."
+
+[[rules]]
+id = "aws-secret-access-key"
+provider = "AWS"
+type = "Secret access key"
+pattern = '''(?i)aws[_-]?secret[_-]?(?:access[_-]?)?key["']?\s*[:=]\s*["']?(?<secret>[A-Za-z0-9/+=]{40})(?![A-Za-z0-9/+=])'''
+keywords = ["aws_secret", "aws-secret", "awssecret"]
+confidence = "high"
+risk = "critical"
+min_entropy = 3.5
+note = "With the access key ID, full API access as that IAM identity. Deactivate the key in IAM and create a new one."
+
+[[rules]]
+id = "azure-storage-connection-string"
+provider = "Azure"
+type = "Storage account key"
+pattern = '(?i)AccountKey=(?<secret>[A-Za-z0-9+/]{86}==)'
+keywords = ["AccountKey="]
+confidence = "high"
+risk = "critical"
+note = "Full access to the storage account's blobs, queues and tables. Rotate the key under Storage account > Access keys."
+
+[[rules]]
+id = "azure-ad-client-secret"
+provider = "Azure"
+type = "Entra ID client secret"
+pattern = '(?<![A-Za-z0-9_~.-])(?<secret>[A-Za-z0-9_~.]{3}\dQ~[A-Za-z0-9_~.-]{31,34})(?![A-Za-z0-9_~.-])'
+keywords = ["Q~"]
+confidence = "high"
+risk = "critical"
+note = "Authenticates as the app registration. Delete it under Entra ID > App registrations > Certificates & secrets."
+
+[[rules]]
+id = "azure-openai-key"
+provider = "Azure"
+type = "Azure OpenAI / Cognitive Services key"
+pattern = '''(?i)(?:azure[_-]?openai|cognitive[_-]?services?|azure[_-]?ai)[A-Za-z0-9_]*[_-]?key["']?\s*[:=]\s*["']?(?<secret>[A-Za-z0-9]{32,84})\b'''
+keywords = ["azure", "cognitive"]
+confidence = "high"
+risk = "high"
+min_entropy = 3.5
+note = "Bills Azure AI usage to your subscription. Regenerate the key in the resource's Keys and Endpoint page."
+
+[[rules]]
+id = "gcp-service-account"
+provider = "Google Cloud"
+type = "Service account key (JSON)"
+pattern = '"private_key_id"\s*:\s*"(?<secret>[a-f0-9]{40})"'
+keywords = ["private_key_id"]
+confidence = "high"
+risk = "critical"
+note = "A service account key file: it authenticates as that service account with all of its IAM roles. Delete the key in IAM > Service accounts > Keys."
+
+# ---------------------------------------------------------------------------- Package registries
+
+[[rules]]
+id = "npm-token"
+provider = "npm"
+type = "Access token"
+pattern = '\b(?<secret>npm_[A-Za-z0-9]{36})(?![A-Za-z0-9])'
+keywords = ["npm_"]
+confidence = "high"
+risk = "critical"
+checksum = "github-crc32"
+note = "Publishes packages as you: a supply-chain risk for everyone who installs them. Revoke at https://www.npmjs.com/settings/~/tokens."
+
+[[rules]]
+id = "npmrc-auth"
+provider = "npm"
+type = "Registry credential in .npmrc"
+pattern = '(?i):?_(?:authToken|auth|password)\s*=\s*(?<secret>[^\s$][^\s]{11,})'
+keywords = ["_authtoken", "_auth", "_password"]
+confidence = "medium"
+risk = "high"
+path_regex = '(?i)\.npmrc$'
+note = "A registry credential. Revoke it with the registry (for npmjs.com at https://www.npmjs.com/settings/~/tokens)."
+
+[[rules]]
+id = "pypi-token"
+provider = "PyPI"
+type = "API token"
+pattern = '\b(?<secret>pypi-AgEIcHlwaS5vcmc[A-Za-z0-9_-]{50,})'
+keywords = ["pypi-AgEI"]
+confidence = "high"
+risk = "critical"
+note = "Uploads releases of your projects (supply-chain risk). Revoke at https://pypi.org/manage/account/token/."
+
+[[rules]]
+id = "pypirc-password"
+provider = "PyPI"
+type = "Password in .pypirc"
+pattern = '(?i)^\s*password\s*[:=]\s*(?<secret>\S{6,})'
+keywords = ["password"]
+confidence = "medium"
+risk = "high"
+path_regex = '(?i)\.pypirc$'
+note = "An index password or token. Revoke it at the package index and use an API token through Hush instead."
+
+[[rules]]
+id = "docker-config-auth"
+provider = "Docker"
+type = "Registry credential"
+pattern = '"auth"\s*:\s*"(?<secret>[A-Za-z0-9+/=]{12,})"'
+keywords = ["\"auth\""]
+confidence = "high"
+risk = "high"
+path_regex = '(?i)\.docker[\\/]config\.json$'
+note = "Base64 username:password (or token) for a container registry. Log out with 'docker logout <registry>', rotate the credential, and configure a credential store."
+
+# ---------------------------------------------------------------------------- Infrastructure
+
+[[rules]]
+id = "database-connection-string"
+provider = "Database"
+type = "Connection string with password"
+pattern = '''\b(?:postgres(?:ql)?|mysql|mariadb|mongodb(?:\+srv)?|redis|rediss|amqps?|mssql|sqlserver)://[^\s:/@"'<>]+:(?<secret>[^\s@"'/<>]{3,})@[^\s"'<>]+'''
+keywords = ["://"]
+confidence = "high"
+risk = "critical"
+note = "Direct database access with that user's privileges. Change the database user's password and update every consumer."
+
+[[rules]]
+id = "git-credentials"
+provider = "Git"
+type = "Stored HTTPS credential"
+pattern = '^\s*https?://(?<user>[^:\s/@]+):(?<secret>[^@\s]+)@[^\s/]+'
+keywords = ["@"]
+confidence = "high"
+risk = "critical"
+path_regex = '(?i)\.git-credentials$'
+note = "A plaintext Git password or token. Revoke it with the host and use 'hush git-helper' as the credential helper."
+
+[[rules]]
+id = "kubeconfig-credential"
+provider = "Kubernetes"
+type = "kubeconfig credential"
+pattern = '''^\s*(?:token|client-key-data|password)\s*:\s*["']?(?<secret>[A-Za-z0-9+/=._-]{20,})'''
+keywords = ["token", "client-key-data", "password"]
+confidence = "high"
+risk = "critical"
+path_regex = '(?i)\.kube[\\/]config$'
+note = "Cluster access as that user or service account. Revoke the token or certificate in the cluster and use an exec credential plugin."
+
+[[rules]]
+id = "private-key"
+provider = "Cryptography"
+type = "Private key block"
+pattern = '(?<secret>-----BEGIN (?:RSA |EC |DSA |OPENSSH |ENCRYPTED |PGP )?PRIVATE KEY(?: BLOCK)?-----)'
+keywords = ["PRIVATE KEY"]
+confidence = "high"
+risk = "critical"
+note = "A private key in plaintext (SSH, TLS, signing or a service account). Replace the key pair and revoke the old public key wherever it is trusted."
+
+[[rules]]
+id = "jwt"
+provider = "Generic"
+type = "JSON Web Token"
+pattern = '\b(?<secret>eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,})'
+keywords = ["eyJ"]
+confidence = "medium"
+risk = "medium"
+checksum = "jwt"
+note = "A bearer token: whoever holds it is authenticated until it expires. Sign out of the issuing service or rotate the signing key if it is long-lived."
+
+# ---------------------------------------------------------------------------- Generic
+
+[[rules]]
+id = "bearer-token"
+provider = "Generic"
+type = "Bearer token"
+pattern = '(?i)\bbearer\s+(?<secret>[A-Za-z0-9._~+/-]{20,}=*)'
+keywords = ["bearer"]
+confidence = "medium"
+risk = "high"
+min_entropy = 3.0
+note = "A bearer credential (for example in an MCP server's HTTP headers): whoever holds it is authenticated. Revoke it with the service that issued it."
+
+
+[[rules]]
+id = "generic-secret-assignment"
+provider = "Generic"
+type = "Secret-looking assignment"
+pattern = '''(?i)["']?[A-Za-z0-9_.-]*(?:api[_.-]?key|secret|token|passw(?:or)?d|credential|access[_.-]?key|private[_.-]?key|auth[_.-]?key)[A-Za-z0-9_.-]*["']?\s*[:=]\s*["']?(?<secret>(?=[A-Za-z0-9_\-+/=.~]*[0-9])(?=[A-Za-z0-9_\-+/=.~]*[A-Za-z])[A-Za-z0-9_\-+/=.~]{16,})["']?'''
+keywords = ["key", "secret", "token", "passw", "credential"]
+confidence = "low"
+risk = "medium"
+min_entropy = 3.5
+note = "A value assigned to a secret-looking name. Check whether it is live; if so, rotate it with its issuer and move it into Hush."
+# The value must mix letters and digits: real credentials do, while code such as `secret = Foo.Bar` does not.

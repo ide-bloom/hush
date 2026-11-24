@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "hush",
+      "args": [
+        "run",
+        "--secrets",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "--",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\dev\\Projects"]
+    },
+    "slack": {
+      "command": "hush",
+      "args": ["run", "--secrets", "SLACK_BOT_TOKEN", "--", "npx", "-y", "@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_TEAM_ID": "T01234567",
+        "LOG_LEVEL": "debug"
+      }
+    }
+  },
+  "globalShortcut": "Ctrl+Space"
+}

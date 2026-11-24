@@ -1,0 +1,30 @@
+{
+  "numStartups": 42,
+  "theme": "dark",
+  "mcpServers": {
+    "brave-search": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@brave/brave-search-mcp-server"],
+      "env": {
+        "BRAVE_API_KEY": "{{BRAVE}}"
+      }
+    }
+  },
+  "projects": {
+    "C:\\work\\shop": {
+      "allowedTools": [],
+      "mcpServers": {
+        "stripe": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["-y", "@stripe/mcp", "--tools=all"],
+          "env": {
+            "STRIPE_SECRET_KEY": "{{STRIPE}}"
+          }
+        }
+      },
+      "hasTrustDialogAccepted": true
+    }
+  }
+}

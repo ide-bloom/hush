@@ -1,0 +1,17 @@
+# Codex configuration
+model = "gpt-5-codex"
+
+[mcp_servers.github]
+command = "hush"
+args = ["run", "--secrets", "GITHUB_PERSONAL_ACCESS_TOKEN", "--", "npx", "-y", "@modelcontextprotocol/server-github"]
+env = { GITHUB_HOST = "github.com" }
+
+[mcp_servers.huggingface]
+# Hugging Face hub tools
+command = "hush"
+args = ["run", "--secrets", "HF_TOKEN", "--", "uvx"]
+startup_timeout_sec = 20
+
+[mcp_servers.docs]
+command = "docs-mcp"
+args = []

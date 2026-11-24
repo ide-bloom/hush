@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(HushWindowsTfm)</TargetFramework>
+    <RootNamespace>Hush.Agent</RootNamespace>
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <Description>The Hush session broker: holds the unlocked vault key in memory and serves verified Hush clients over a per-user named pipe.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hush.Core\Hush.Core.csproj" />
+    <ProjectReference Include="..\Hush.Analyzers\Hush.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Win32.SystemEvents" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hush.Cli.Tests" />
+  </ItemGroup>
+
+</Project>

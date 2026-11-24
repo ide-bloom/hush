@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      xunit:
+        patterns: ["xunit*", "Microsoft.NET.Test.Sdk"]
+      roslyn:
+        patterns: ["Microsoft.CodeAnalysis*"]
+    ignore:
+      # Analyzers must not reference a Roslyn newer than the oldest supported .NET 10 SDK compiler.
+      - dependency-name: "Microsoft.CodeAnalysis.CSharp"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

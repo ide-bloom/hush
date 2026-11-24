@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>$(HushWindowsTfm)</TargetFramework>
+    <RootNamespace>Hush.App</RootNamespace>
+    <AssemblyName>HushTray</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>..\..\assets\hush.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <Description>HushTray.exe: the Hush tray app (vault, scan, audit and settings views).</Description>
+    <DebugType>embedded</DebugType>
+    <!--
+      WinForms is referenced only for NotifyIcon. Per-monitor-v2 DPI awareness is declared in app.manifest, which
+      is how WPF reads it; WFO0003 is WinForms' advice for WinForms-hosted UIs and does not apply here.
+    -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <!-- Self-contained single file for releases (applies only to 'dotnet publish'). WPF does not support trimming. -->
+  <PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="..\..\assets\tray-locked.ico" Link="Assets\tray-locked.ico" />
+    <Resource Include="..\..\assets\tray-unlocked.ico" Link="Assets\tray-unlocked.ico" />
+    <Resource Include="..\..\assets\hush.png" Link="Assets\hush.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hush.App.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hush.Core\Hush.Core.csproj" />
+    <ProjectReference Include="..\Hush.Analyzers\Hush.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

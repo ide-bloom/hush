@@ -1,0 +1,23 @@
+{
+  // Inputs prompt for values at startup (not migrated: nothing is stored in the file).
+  "inputs": [
+    { "type": "promptString", "id": "pat", "description": "Token", "password": true }
+  ],
+  "servers": {
+    /* Anthropic tools server */
+    "claude-tools": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["C:\\mcp\\claude-tools\\index.js"],
+      "env": {
+        "ANTHROPIC_API_KEY": "{{ANTHROPIC}}", // pasted from the console
+        "DEBUG": "1",
+      },
+    },
+    "uses-input": {
+      "command": "npx",
+      "args": ["-y", "some-server"],
+      "env": { "TOKEN": "${input:pat}" }
+    },
+  },
+}

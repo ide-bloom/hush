@@ -1,0 +1,11 @@
+{
+  "theme": "GitHub",
+  "selectedAuthType": "oauth-personal",
+  "mcpServers": {
+    "slack": {
+      "command": "hush",
+      "args": ["run", "--secrets", "SLACK_BOT_TOKEN", "--", "npx", "-y", "@modelcontextprotocol/server-slack"],
+      "timeout": 30000
+    }
+  }
+}
