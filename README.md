@@ -21,7 +21,7 @@ hush run -- claude
 ```
 
 Hush is part of **Palisade**, a toolkit for developer security in the AI-agent era, with
-[Epicurus](https://github.com/ide-bloom/epicurus) and [Chaperone](https://github.com/ide-bloom/chaperone).
+[Epicurus](https://github.com/ide-bloom/epicurus) and [Rousseau](https://github.com/ide-bloom/rousseau).
 
 ## Why Hush exists
 
